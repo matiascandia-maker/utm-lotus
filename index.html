@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de UTMs – Lotus Producciones</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-tertiary: #ededea;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b67;
+      --text-tertiary: #9f9f9a;
+      --border-tertiary: rgba(0,0,0,0.12);
+      --border-secondary: rgba(0,0,0,0.22);
+      --border-primary: rgba(0,0,0,0.35);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+      --required: #D85A30;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1e1e1c;
+        --bg-secondary: #2a2a28;
+        --bg-tertiary: #141412;
+        --text-primary: #f0f0ec;
+        --text-secondary: #a0a09c;
+        --text-tertiary: #6a6a66;
+        --border-tertiary: rgba(255,255,255,0.1);
+        --border-secondary: rgba(255,255,255,0.18);
+        --border-primary: rgba(255,255,255,0.28);
+      }
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .wrap { width: 100%; max-width: 640px; }
+
+    .header { margin-bottom: 2rem; }
+    .header h1 { font-size: 18px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+    .header p { font-size: 13px; color: var(--text-secondary); }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.6rem;
+    }
+
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-tertiary);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .field-row.full { grid-template-columns: 1fr; }
+    .field-row:last-child { margin-bottom: 0; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+
+    .field-label { font-size: 12px; color: var(--text-secondary); }
+    .required { color: var(--required); }
+    .optional-badge {
+      font-size: 10px;
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-tertiary);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--text-tertiary);
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    input[type=text], select {
+      width: 100%;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 0.5px solid var(--border-secondary);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: auto;
+    }
+
+    input[type=text]:focus, select:focus {
+      border-color: var(--border-primary);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    }
+
+    input[readonly] {
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      cursor: default;
+    }
+
+    .hint { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
+
+    .custom-field {
+      margin-top: 6px;
+      display: none;
+    }
+    .custom-field.visible { display: flex; flex-direction: column; gap: 4px; }
+
+    .result-box {
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-tertiary);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      word-break: break-all;
+      color: var(--text-tertiary);
+      min-height: 52px;
+      line-height: 1.7;
+    }
+    .result-box.ready { color: var(--text-primary); }
+
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 6px 14px;
+      border: 0.5px solid var(--border-secondary);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    button:hover { background: var(--bg-secondary); }
+    button:active { transform: scale(0.98); }
+    button i { font-size: 15px; }
+
+    .btn-primary {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+    .btn-primary:hover { opacity: 0.85; background: var(--text-primary); }
+
+    .divider { border: none; border-top: 0.5px solid var(--border-tertiary); margin: 1.25rem 0; }
+
+    .tab-row { display: flex; gap: 4px; margin-bottom: 1.25rem; }
+    .tab {
+      font-size: 13px;
+      padding: 6px 16px;
+      border: 0.5px solid var(--border-tertiary);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .tab.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border-color: var(--border-primary);
+      font-weight: 500;
+    }
+
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .checklist li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding-left: 1.1rem;
+      position: relative;
+      line-height: 1.5;
+    }
+    .checklist li::before { content: "–"; position: absolute; left: 0; color: var(--text-tertiary); }
+
+    .copied-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      font-size: 12px;
+      padding: 6px 16px;
+      border-radius: 99px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .copied-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .status-msg {
+      font-size: 12px;
+      margin-top: 8px;
+      min-height: 18px;
+      color: var(--text-tertiary);
+    }
+    .status-msg.ok { color: #2d8a4e; }
+    .status-msg.error { color: var(--required); }
+
+
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <h1>Generador de UTMs</h1>
+    <p>Lotus Producciones – uso interno</p>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="setTab('medios')" id="tab-medios">Medios</button>
+    <button class="tab" onclick="setTab('influencers')" id="tab-influencers">Influencers</button>
+  </div>
+
+  <!-- PANEL MEDIOS -->
+  <div id="panel-medios">
+    <div class="section-label">Datos del medio</div>
+    <div class="card">
+
+      <div class="field-row full">
+        <div class="field-group">
+          <label class="field-label">URL de destino <span class="required">*</span></label>
+          <input type="text" id="m-url" value="https://festivalbamba.cl" oninput="genMedios()" />
+        </div>
+      </div>
+
+      <div class="field-row" style="margin-top:12px;">
+        <div class="field-group">
+          <label class="field-label">Medio (source) <span class="required">*</span></label>
+          <select id="m-source" onchange="toggleCustom('m-source'); genMedios()">
+            <option value="">Seleccionar...</option>
+            <optgroup label="Media partners">
+              <option value="rock_and_pop">Rock &amp; Pop</option>
+              <option value="fmdos">FMdos</option>
+              <option value="activa">Activa</option>
+              <option value="adn">ADN</option>
+              <option value="la_tercera">La Tercera</option>
+            </optgroup>
+            <optgroup label="Alianzas">
+              <option value="cooperativa">Cooperativa</option>
+              <option value="the_clinic">The Clinic</option>
+            </optgroup>
+            <optgroup label="Plataformas digitales">
+              <option value="youtube">YouTube</option>
+              <option value="facebook">Facebook</option>
+              <option value="instagram">Instagram</option>
+            </optgroup>
+            <optgroup label="Otros medios">
+              <option value="mega">Mega</option>
+              <option value="cnn_chile">CNN Chile</option>
+              <option value="emol">Emol</option>
+              <option value="biobio">BioBío Chile</option>
+              <option value="t13">T13</option>
+              <option value="otro">Otro</option>
+            </optgroup>
+          </select>
+          <div class="custom-field" id="m-source-custom-wrap">
+            <input type="text" id="m-source-custom" placeholder="ej: el_mostrador" oninput="genMedios()" />
+            <span class="hint">Minúsculas y guión bajo</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Formato (medium) <span class="required">*</span></label>
+          <select id="m-medium" onchange="toggleCustom('m-medium'); genMedios()">
+            <option value="">Seleccionar...</option>
+            <optgroup label="Editorial">
+              <option value="nota_editorial">Nota editorial</option>
+              <option value="newsletter">Newsletter</option>
+              <option value="display">Banner / display</option>
+            </optgroup>
+            <optgroup label="Pauta digital">
+              <option value="paid_social">Paid social</option>
+              <option value="display">Display / banner</option>
+              <option value="video_ad">Video ad</option>
+            </optgroup>
+            <optgroup label="Orgánico">
+              <option value="organic_video">Video orgánico</option>
+              <option value="organic_social">Social orgánico</option>
+            </optgroup>
+            <optgroup label="Redes sociales del medio">
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="x">X (Twitter)</option>
+              <option value="tiktok">TikTok</option>
+            </optgroup>
+            <optgroup label="Otros">
+              <option value="otro">Otro</option>
+            </optgroup>
+          </select>
+          <div class="custom-field" id="m-medium-custom-wrap">
+            <input type="text" id="m-medium-custom" placeholder="ej: podcast" oninput="genMedios()" />
+            <span class="hint">Minúsculas y guión bajo</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Campaña <span class="required">*</span></label>
+          <select id="m-campaign" onchange="toggleCustom('m-campaign'); genMedios()">
+            <option value="">Cargando campañas...</option>
+          </select>
+          <div class="custom-field" id="m-campaign-custom-wrap">
+            <input type="text" id="m-campaign-custom" placeholder="ej: slayer_2026" oninput="genMedios()" />
+            <span class="hint">Minúsculas y guión bajo</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Contenido <span class="optional-badge">opcional</span></label>
+          <input type="text" id="m-content" placeholder="ej: nota_marc_anthony" oninput="genMedios()" />
+          <span class="hint">Usar si el mismo medio publica más de una pieza</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-label">URL generada</div>
+    <div class="result-box" id="m-result">Completa los campos obligatorios para generar el link.</div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="copyAndLog('m')"><i class="ti ti-copy"></i> Copiar y registrar</button>
+      <button onclick="copyEl('m-result')"><i class="ti ti-copy"></i> Solo copiar</button>
+    </div>
+    <div class="status-msg" id="m-status"></div>
+
+    <hr class="divider" />
+
+    <div class="section-label">Antes de entregar al medio</div>
+    <div class="card">
+      <ul class="checklist">
+        <li>El link abre el sitio del evento en el navegador</li>
+        <li>Los parámetros UTM son visibles en la barra de la URL</li>
+        <li>El link fue registrado en el tracker de medios (Google Sheets)</li>
+        <li>Se instruyó al medio a usar el link exacto sin modificarlo</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PANEL INFLUENCERS -->
+  <div id="panel-influencers" style="display:none;">
+    <div class="section-label">Datos del influencer</div>
+    <div class="card">
+
+      <div class="field-row full">
+        <div class="field-group">
+          <label class="field-label">URL de destino <span class="required">*</span></label>
+          <input type="text" id="i-url" value="https://festivalbamba.cl" oninput="genInfluencers()" />
+        </div>
+      </div>
+
+      <div class="field-row" style="margin-top:12px;">
+        <div class="field-group">
+          <label class="field-label">Usuario del influencer <span class="required">*</span></label>
+          <input type="text" id="i-username" placeholder="ej: juanperez (sin @)" oninput="genInfluencers()" />
+          <span class="hint">Sin @, sin espacios, minúsculas</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Red social (medium) <span class="required">*</span></label>
+          <select id="i-medium" onchange="genInfluencers()">
+            <option value="">Seleccionar...</option>
+            <option value="tiktok">TikTok</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Campaña <span class="required">*</span></label>
+          <select id="i-campaign" onchange="toggleCustom('i-campaign'); genInfluencers()">
+            <option value="">Cargando campañas...</option>
+          </select>
+          <div class="custom-field" id="i-campaign-custom-wrap">
+            <input type="text" id="i-campaign-custom" placeholder="ej: slayer_2026" oninput="genInfluencers()" />
+            <span class="hint">Minúsculas y guión bajo</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Contenido <span class="optional-badge">opcional</span></label>
+          <input type="text" id="i-content" placeholder="ej: story_preventa, video_lineup" oninput="genInfluencers()" />
+          <span class="hint">Usar si el influencer publica más de una pieza</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-label">URL generada</div>
+    <div class="result-box" id="i-result">Completa los campos obligatorios para generar el link.</div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="copyAndLog('i')"><i class="ti ti-copy"></i> Copiar y registrar</button>
+      <button onclick="copyEl('i-result')"><i class="ti ti-copy"></i> Solo copiar</button>
+    </div>
+    <div class="status-msg" id="i-status"></div>
+
+    <hr class="divider" />
+
+    <div class="section-label">Antes de entregar al influencer</div>
+    <div class="card">
+      <ul class="checklist">
+        <li>El link abre el sitio del evento en el navegador</li>
+        <li>Los parámetros UTM son visibles en la barra de la URL</li>
+        <li>El link fue registrado en el tracker de influencers (Google Sheets)</li>
+        <li>Se instruyó al influencer a usar el link exacto en bio o descripción, sin acortarlo ni modificarlo</li>
+        <li>Si usa link en bio (Instagram/TikTok), confirmar que el link esté activo antes de que publique</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="copied-toast" id="toast">Link copiado</div>
+
+<script>
+  function getScriptURL() {
+    return 'https://script.google.com/macros/s/AKfycbxSqx7lsBnExJV_7v9Kw4pXf3ibXg4SVhRco6ilEJUSHnZyS4ZftoO5kVDoMHffONYFmA/exec';
+  }
+
+  async function cargarCampanas() {
+    const url = getScriptURL() + '?action=campanas';
+    const selectors = ['m-campaign', 'i-campaign'];
+    try {
+      const res = await fetch(url, { method: 'GET', mode: 'cors' });
+      const json = await res.json();
+      if (json.status === 'ok' && json.campanas.length) {
+        selectors.forEach(id => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = '<option value="">Seleccionar...</option>';
+          const group = document.createElement('optgroup');
+          group.label = 'Campañas activas';
+          json.campanas.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.value;
+            opt.textContent = c.label;
+            group.appendChild(opt);
+          });
+          sel.appendChild(group);
+          const otroGroup = document.createElement('optgroup');
+          otroGroup.label = 'Otros';
+          const otroOpt = document.createElement('option');
+          otroOpt.value = 'otro';
+          otroOpt.textContent = 'Otro';
+          otroGroup.appendChild(otroOpt);
+          sel.appendChild(otroGroup);
+        });
+      }
+    } catch (err) {
+      selectors.forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = '<option value="">Error al cargar. Usar "Otro".</option><optgroup label="Otros"><option value="otro">Otro</option></optgroup>';
+      });
+    }
+  }
+
+  function setTab(tab) {
+    document.getElementById('panel-medios').style.display = tab === 'medios' ? '' : 'none';
+    document.getElementById('panel-influencers').style.display = tab === 'influencers' ? '' : 'none';
+    document.getElementById('tab-medios').className = 'tab' + (tab === 'medios' ? ' active' : '');
+    document.getElementById('tab-influencers').className = 'tab' + (tab === 'influencers' ? ' active' : '');
+  }
+
+  // Muestra u oculta el campo custom según si se seleccionó "otro"
+  function toggleCustom(fieldId) {
+    const sel = document.getElementById(fieldId);
+    const wrap = document.getElementById(fieldId + '-custom-wrap');
+    if (!wrap) return;
+    wrap.className = sel.value === 'otro' ? 'custom-field visible' : 'custom-field';
+    // Limpiar si se oculta
+    if (sel.value !== 'otro') {
+      const input = document.getElementById(fieldId + '-custom');
+      if (input) input.value = '';
+    }
+  }
+
+  function sanitize(str) {
+    return str.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function buildURL(base, source, medium, campaign, content) {
+    let url = base + '?utm_source=' + source + '&utm_medium=' + medium + '&utm_campaign=' + campaign;
+    if (content) url += '&utm_content=' + content;
+    return url;
+  }
+
+  function setResult(id, value) {
+    const box = document.getElementById(id);
+    if (!value) {
+      box.textContent = 'Completa los campos obligatorios para generar el link.';
+      box.className = 'result-box';
+    } else {
+      box.textContent = value;
+      box.className = 'result-box ready';
+    }
+  }
+
+  function resolveField(selectId) {
+    const sel = document.getElementById(selectId);
+    if (sel.value === 'otro') {
+      const custom = document.getElementById(selectId + '-custom');
+      return custom ? sanitize(custom.value) : '';
+    }
+    return sel.value;
+  }
+
+  function genMedios() {
+    const url = document.getElementById('m-url').value.trim();
+    const source = resolveField('m-source');
+    const medium = resolveField('m-medium');
+    const campaign = resolveField('m-campaign');
+    const content = sanitize(document.getElementById('m-content').value);
+    if (!url || !source || !medium || !campaign) return setResult('m-result', null);
+    setResult('m-result', buildURL(url, source, medium, campaign, content));
+  }
+
+  function genInfluencers() {
+    const url = document.getElementById('i-url').value.trim();
+    const username = sanitize(document.getElementById('i-username').value);
+    const medium = document.getElementById('i-medium').value;
+    const campaign = resolveField('i-campaign');
+    const content = sanitize(document.getElementById('i-content').value);
+    if (!url || !username || !medium || !campaign) return setResult('i-result', null);
+    setResult('i-result', buildURL(url, username, medium, campaign, content));
+  }
+
+  function copyEl(id) {
+    const box = document.getElementById(id);
+    if (!box.classList.contains('ready')) return false;
+    navigator.clipboard.writeText(box.textContent);
+    showToast('Link copiado');
+    return true;
+  }
+
+  async function copyAndLog(prefix) {
+    const resultId = prefix + '-result';
+    const box = document.getElementById(resultId);
+    if (!box.classList.contains('ready')) return;
+
+    navigator.clipboard.writeText(box.textContent);
+    showToast('Link copiado');
+
+    const scriptURL = getScriptURL();
+    const statusEl = document.getElementById(prefix + '-status');
+
+    if (!scriptURL) {
+      statusEl.textContent = 'Link copiado.';
+      statusEl.className = 'status-msg';
+      return;
+    }
+
+    statusEl.textContent = 'Registrando en Google Sheets...';
+    statusEl.className = 'status-msg';
+
+    const urlParts = new URL(box.textContent);
+    const params = Object.fromEntries(urlParts.searchParams.entries());
+
+    const payload = {
+      tipo: prefix === 'm' ? 'medio' : 'influencer',
+      source: params.utm_source || '',
+      medium: params.utm_medium || '',
+      campaign: params.utm_campaign || '',
+      content: params.utm_content || '',
+      url: box.textContent
+    };
+
+    try {
+      const res = await fetch(scriptURL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.status === 'duplicate') {
+        statusEl.innerHTML = 'Este link ya existe en el tracker: <span style="font-family:var(--font-mono);font-size:11px;">' + json.url + '</span>';
+        statusEl.className = 'status-msg error';
+      } else {
+        statusEl.textContent = 'Registrado en Google Sheets.';
+        statusEl.className = 'status-msg ok';
+      }
+    } catch (err) {
+      statusEl.textContent = 'No se pudo conectar con Google Sheets. Copia el link manualmente.';
+      statusEl.className = 'status-msg error';
+    }
+
+    setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'status-msg'; }, 5000);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+
+  cargarCampanas();
+</script>
+</body>
+</html>
