@@ -588,11 +588,18 @@
     };
 
     try {
-      const res = await fetch(scriptURL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const params = new URLSearchParams({
+        action: 'registrar',
+        tipo: payload.tipo,
+        source: payload.source,
+        medium: payload.medium,
+        campaign: payload.campaign,
+        content: payload.content || '',
+        url: payload.url
+      });
+      const res = await fetch(scriptURL + '?' + params.toString(), {
+        method: 'GET',
+        mode: 'cors'
       });
       const json = await res.json();
       if (json.status === 'duplicate') {
