@@ -568,8 +568,8 @@
     const hint = document.getElementById('m-medium-hint');
     hint.textContent = hints[sel.value] || '';
   }
-  function resolveField(selectId) {
-    const sel = document.getElementById(selectId);
+
+  function genMedios() {
     const url = document.getElementById('m-url').value.trim();
     const source = resolveField('m-source');
     const medium = resolveField('m-medium');
