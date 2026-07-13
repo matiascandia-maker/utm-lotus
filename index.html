@@ -227,7 +227,7 @@
 <div class="wrap">
   <div class="header">
     <h1>Generador de UTMs</h1>
-    <p>Lotus Producciones – uso interno</p>
+    <p>Lotus Producciones – uso interno &nbsp;·&nbsp; <a href="https://docs.google.com/spreadsheets/d/1UmzeIGOzm7vdWjjtzoyLd75MvKRAE7_iC4NB7ls64uY/edit?usp=sharing" target="_blank" style="color:var(--text-secondary);text-decoration:underline;font-size:13px;">Ver tracker de links registrados →</a></p>
   </div>
 
   <div class="tab-row">
@@ -264,9 +264,10 @@
               <option value="the_clinic">The Clinic</option>
             </optgroup>
             <optgroup label="Plataformas digitales">
+              <option value="google">Google</option>
               <option value="youtube">YouTube</option>
-              <option value="facebook">Facebook</option>
-              <option value="instagram">Instagram</option>
+              <option value="meta">Meta (Facebook + Instagram)</option>
+              <option value="tiktok">TikTok</option>
             </optgroup>
             <optgroup label="Otros medios">
               <option value="mega">Mega</option>
@@ -285,27 +286,27 @@
 
         <div class="field-group">
           <label class="field-label">Formato (medium) <span class="required">*</span></label>
-          <select id="m-medium" onchange="toggleCustom('m-medium'); genMedios()">
+          <select id="m-medium" onchange="toggleCustom('m-medium'); updateMediumHint(); genMedios()">
             <option value="">Seleccionar...</option>
             <optgroup label="Editorial">
-              <option value="nota_editorial">Nota editorial</option>
-              <option value="newsletter">Newsletter</option>
-              <option value="display">Banner / display</option>
+              <option value="nota_editorial">Nota editorial – cobertura orgánica en medios</option>
+              <option value="newsletter">Newsletter – envío por email del medio</option>
             </optgroup>
-            <optgroup label="Pauta digital">
-              <option value="paid_social">Paid social</option>
-              <option value="display">Display / banner</option>
-              <option value="video_ad">Video ad</option>
+            <optgroup label="Google Ads">
+              <option value="cpc">CPC – Search (palabras clave)</option>
+              <option value="display">Display – banners gráficos red de Google</option>
+              <option value="pmax">Performance Max – campaña automatizada Google</option>
+              <option value="programmatic">Programática – DV360 u otro DSP</option>
             </optgroup>
-            <optgroup label="Orgánico">
-              <option value="organic_video">Video orgánico</option>
-              <option value="organic_social">Social orgánico</option>
+            <optgroup label="YouTube">
+              <option value="preroll">Pre-roll – video antes del contenido</option>
+              <option value="bumper">Bumper – video corto 6 segundos</option>
+              <option value="video_ad">Video ad – otros formatos de video</option>
             </optgroup>
-            <optgroup label="Redes sociales del medio">
-              <option value="instagram">Instagram</option>
-              <option value="facebook">Facebook</option>
-              <option value="x">X (Twitter)</option>
-              <option value="tiktok">TikTok</option>
+            <optgroup label="Pauta en redes">
+              <option value="paid_social">Paid social – pauta Meta, TikTok</option>
+              <option value="organic_video">Organic video – video orgánico</option>
+              <option value="organic_social">Organic social – post orgánico en redes</option>
             </optgroup>
             <optgroup label="Otros">
               <option value="otro">Otro</option>
@@ -315,6 +316,7 @@
             <input type="text" id="m-medium-custom" placeholder="ej: podcast" oninput="genMedios()" />
             <span class="hint">Minúsculas y guión bajo</span>
           </div>
+          <span class="hint" id="m-medium-hint"></span>
         </div>
       </div>
 
@@ -527,7 +529,27 @@
     return sel.value;
   }
 
-  function genMedios() {
+  function updateMediumHint() {
+    const hints = {
+      preroll: 'Video que aparece antes del contenido en YouTube',
+      bumper: 'Video corto de 6 segundos en YouTube',
+      video_ad: 'Otros formatos de video en YouTube',
+      cpc: 'Anuncio de búsqueda en Google Search (palabras clave)',
+      display: 'Banners gráficos en la red de display de Google',
+      pmax: 'Campaña Performance Max automatizada de Google',
+      programmatic: 'Pauta programática vía DV360 u otro DSP',
+      paid_social: 'Pauta pagada en Meta (Facebook/Instagram) o TikTok',
+      organic_video: 'Video publicado orgánicamente sin pauta',
+      organic_social: 'Post orgánico en redes sin pauta',
+      nota_editorial: 'Cobertura orgánica en medios de comunicación',
+      newsletter: 'Envío por email del medio',
+    };
+    const sel = document.getElementById('m-medium');
+    const hint = document.getElementById('m-medium-hint');
+    hint.textContent = hints[sel.value] || '';
+  }
+  function resolveField(selectId) {
+    const sel = document.getElementById(selectId);
     const url = document.getElementById('m-url').value.trim();
     const source = resolveField('m-source');
     const medium = resolveField('m-medium');
